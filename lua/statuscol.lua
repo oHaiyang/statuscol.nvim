@@ -277,18 +277,36 @@ local function get_statuscol_string()
   args.relnum = v.relnum
   args.virtnum = v.virtnum
 
+  if _G.debug_stc == true then
+    vim.notify("formatstr: ", formatstr);
+  end
+
   -- once per window per redraw
   if args.tick < tick then
     update_callargs(args, win, tick)
   end
 
+  if _G.debug_stc == true then
+    vim.api.nvim_echo({{"formatargcount: "}, {vim.inspect(formatargcount)}}, true, {});
+  end
   for i = 1, formatargcount do
     local fa = formatargs[i]
+    if _G.debug_stc == true then
+      vim.api.nvim_echo({{"fa: "}, {vim.inspect(fa)}}, true, {});
+    end
     formatargret[i] = (fa.cond == true or fa.cond(args))
-      and (fa.textfunc and fa.text(args, fa) or fa.text) or ""
+        and (fa.textfunc and fa.text(args, fa) or fa.text) or ""
   end
 
-  return formatstr:format(unpack(formatargret))
+  if _G.debug_stc == true then
+    vim.api.nvim_echo({{"formatargret: "}, {vim.inspect(formatargret)}}, true, {});
+  end
+  local formated = formatstr:format(unpack(formatargret))
+  if _G.debug_stc == true then
+    vim.api.nvim_echo({{"formatstr: "}, {formatstr}}, true, {});
+    vim.api.nvim_echo({{"formated: "}, {formated}}, true, {});
+  end
+  return formated
 end
 
 function M.setup(user)
@@ -331,7 +349,9 @@ function M.setup(user)
   }
   if user then cfg = vim.tbl_deep_extend("force", cfg, user) end
   if cfg.order then
-    vim.notify('The "order" configuration key is deprecated. Refer to the "segments" key in |statuscol-configuration| instead.', vim.log.levels.WARN)
+    vim.notify(
+      'The "order" configuration key is deprecated. Refer to the "segments" key in |statuscol-configuration| instead.',
+      vim.log.levels.WARN)
   end
   builtin.init(cfg)
 
